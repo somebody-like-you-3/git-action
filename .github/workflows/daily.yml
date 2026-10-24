@@ -1,0 +1,15 @@
+name: Topic check
+on:
+  schedule:
+    - cron: "0 3 * * *"      # daily at 03:00 UTC
+  workflow_dispatch:          # adds a manual Run button
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find new repos
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh search repos --topic=machine-learning --sort=stars --limit=10
