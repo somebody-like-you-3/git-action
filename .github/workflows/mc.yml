@@ -1,0 +1,41 @@
+name: Minecraft server test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download latest server jar
+        run: |
+          MANIFEST=https://piston-meta.mojang.com/mc/game/version_manifest_v2.json
+          LATEST=$(curl -s $MANIFEST | jq -r .latest.release)
+          VERSION_URL=$(curl -s $MANIFEST | jq -r --arg v "$LATEST" '.versions[] | select(.id==$v) | .url')
+          JAR_URL=$(curl -s "$VERSION_URL" | jq -r .downloads.server.url)
+          echo "Version: $LATEST"
+          curl -L -o server.jar "$JAR_URL"
+
+      - name: Accept EULA
+        run: echo "eula=true" > eula.txt
+
+      - name: Start server and wait for it to boot
+        run: |
+          nohup java -Xmx2G -jar server.jar nogui > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            grep -q "Done" server.log && break
+            sleep 5
+          done
+          tail -n 20 server.log
+          grep -q "Done" server.log   # fails the step if it never booted
+
+      - name: Stop server
+        if: always()
+        run: pkill -f server.jar || true
