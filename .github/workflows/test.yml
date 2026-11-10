@@ -1,0 +1,23 @@
+name: Download from youtube
+
+on:
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install yt-dlp
+        run: pip install -U yt-dlp
+
+      - name: Download playlist
+        run: |
+          mkdir downloads
+          yt-dlp -o "downloads/%(playlist_index)s - %(title)s.%(ext)s" \
+            "https://www.youtube.com/playlist?list=PLWv9VM947MKiPVBef5qMVW60hU1iHletX"
+
+      - name: Upload as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: playlist
+          path: downloads/
