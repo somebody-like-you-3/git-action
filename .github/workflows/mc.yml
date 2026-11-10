@@ -25,7 +25,6 @@ jobs:
 
       - name: Accept EULA
         run: echo "eula=true" > eula.txt
-
       - name: Start server and wait for it to boot
         run: |
           nohup java -Xmx2G -jar server.jar nogui > server.log 2>&1 &
@@ -34,7 +33,7 @@ jobs:
             sleep 5
           done
           tail -n 20 server.log
-          grep -q "Done" server.log   # fails the step if it never booted
+          grep -q "Done" server.log
 
       - name: Stop server
         if: always()
